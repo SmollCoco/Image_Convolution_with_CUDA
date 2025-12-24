@@ -1,0 +1,28 @@
+# Build artifacts
+bin/
+build/
+*.o
+*.obj
+*.exe
+*.pdb
+*.dll
+*.lib
+*.exp
+*.out
+
+# Generated images
+output.png
+
+# Vendor headers
+include/stb_image.h
+include/stb_image_write.h
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors/IDE
+.vscode/
+.idea/
+*.swp
