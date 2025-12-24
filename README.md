@@ -56,13 +56,13 @@ The following convolution filters are available:
 
 The **edge filter** highlights intensity discontinuities by subtracting surrounding pixels from the center pixel:
 
-\[
+$$
 \begin{bmatrix}
--1 & -1 & -1 \\
--1 & \;\;8 & -1 \\
+-1 & -1 & -1 \\\\
+-1 & 8 & -1 \\\\
 -1 & -1 & -1
 \end{bmatrix}
-\]
+$$
 
 This kernel suppresses flat regions while preserving sharp transitions such as object boundaries.
 
