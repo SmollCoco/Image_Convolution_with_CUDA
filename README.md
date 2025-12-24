@@ -1,54 +1,170 @@
-# CUDA Image Convolution
+<div align="center">
 
-CUDA sample that applies 3x3 image filters (identity, Gaussian blur, edge detect, sharpen) using shared-memory tiling with halo exchange. A small Python CLI wraps build and execution for quick demos.
+# 🖼️ Image Convolution with CUDA
 
-## Features
-- 16x16 thread blocks cooperatively load an 18x18 shared tile (block + 1px halo) to avoid redundant global reads.
-- Boundary sampling is clamped in the load step so the inner convolution loop stays branch-free.
-- Filter coefficients live in constant memory for fast broadcast to the SM.
-- Python CLI (`scripts/cli.py`) handles building via `make`, piping menu input to the binary, and optional visualization.
+![CUDA](https://img.shields.io/badge/CUDA-GPU%20Accelerated-76B900?logo=nvidia&logoColor=white)
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue?logo=cplusplus)
+![Python](https://img.shields.io/badge/Python-CLI-yellow?logo=python)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
-## Prerequisites
-- CUDA toolkit (`nvcc`) and an NVIDIA GPU (set `ARCH` to your target SM, default `sm_75`).
-- `make` and `wget` for fetching STB headers.
-- Python 3.8+; `matplotlib` only if you want `--show` visualization.
+**GPU-accelerated 2D image convolution using NVIDIA CUDA**  
+*A practical, educational project demonstrating classic image filters with shared-memory optimization.*
 
-## Build
-```bash
-# Build binary to bin/convolution
-make ARCH=sm_75
+</div>
+
+---
+
+## 📑 Table of Contents
+- [About](#about)
+- [Filters Implemented](#filters-implemented)
+- [Demo](#demo)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Build](#build)
+  - [Run](#run)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## 🧠 About
+
+This project implements **2D image convolution on the GPU using CUDA**, focusing on clarity, correctness, and performance.  
+It applies common **3×3 convolution filters** to images and compares results with a CPU-style pipeline.
+
+To achieve efficient execution, the CUDA kernel uses:
+- **Thread tiling**
+- **Shared memory**
+- **Halo (boundary) exchange**
+
+A **Python CLI** is provided to simplify building, running, and visualizing results.
+
+---
+
+## ✨ Filters Implemented
+
+The following convolution filters are available:
+
+- `identity`
+- `gaussian`
+- `edge`
+- `sharpen`
+
+### Edge Detection Kernel
+
+The **edge filter** highlights intensity discontinuities by subtracting surrounding pixels from the center pixel:
+
+\[
+\begin{bmatrix}
+-1 & -1 & -1 \\
+-1 & \;\;8 & -1 \\
+-1 & -1 & -1
+\end{bmatrix}
+\]
+
+This kernel suppresses flat regions while preserving sharp transitions such as object boundaries.
+
+---
+
+## 🖼️ Demo
+
+### Edge Detection — CUDA Output
+
+<img src="./assets/edge_detection_cuda.png" alt="Original image vs CUDA edge detection result using 3x3 convolution" width="100%"/>
+
+**Left:** Original image  
+**Right:** Output after CUDA convolution using the edge detection kernel
+
+---
+
+## 📁 Project Structure
+
 ```
 
-## Run via CLI
-```bash
-# Build (if needed) and run a Gaussian blur, then display results
-python scripts/cli.py --build --image data/input.png --filter gaussian --show
-```
-
-Filters: `identity`, `gaussian`, `edge`, `sharpen`.
-
-The CLI pipes the expected menu commands to the C++ app: set file, set filter, process, exit. Output is written to `output.png` in the repo root.
-
-## Algorithm: Shared Tile + Halo
-- Each block owns a 16x16 output region; shared memory allocates `(16 + 2*1)^2` RGB floats (18x18) to hold block data plus a 1-pixel halo.
-- Threads load their center pixels; boundary threads also load left/right/top/bottom halos, and four corner threads load the diagonal halo cells.
-- Global reads clamp coordinates to `[0, width-1]` / `[0, height-1]`, so the convolution loop has no boundary condition branches.
-- After a `__syncthreads()`, each thread multiplies the 3x3 neighborhood from shared memory by the constant-memory kernel and writes a clamped 0–255 result.
-
-## Repository Layout
-```
+Image_Convolution_with_CUDA/
 ├── Makefile
 ├── README.md
 ├── .gitignore
-├── include/           # STB headers downloaded by make
+├── include/            # External headers (e.g. stb_image)
+├── assets/
 ├── src/
-│   ├── kernels.cu     # CUDA kernel with shared-memory tiling + halo
-│   └── main.cpp       # Host driver, launches kernel
+│   ├── main.cpp        # Host-side logic
+│   └── kernels.cu     # CUDA convolution kernels
 ├── scripts/
-│   └── cli.py         # Python CLI: build/run/show
-└── data/              # Put your input images here
+│   └── cli.py         # Python CLI (build, run, visualize)
+└── data/
+└── input images
+
+````
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- NVIDIA GPU with CUDA support
+- CUDA Toolkit (tested with modern 11+ versions)
+- `make`
+- Python 3 (for CLI)
+
+---
+
+### Build
+
+```bash
+make ARCH=sm_75
+````
+
+Adjust `ARCH` to match your GPU compute capability.
+
+---
+
+### Run
+
+Using the Python CLI:
+
+```bash
+python scripts/cli.py --build --image data/input.png --filter edge --show
 ```
 
-## Notes
-- If you change the GPU target, pass `ARCH=sm_xy` to `make` or set it in the Makefile.
-- The build downloads `stb_image.h` and `stb_image_write.h` into `include/`; they are git-ignored.
+---
+
+## 🧪 Usage
+
+CLI options include:
+
+* `--build` : compile the project
+* `--image` : input image path
+* `--filter` : one of `identity | gaussian | edge | sharpen`
+* `--show` : display the output image
+
+This setup allows quick experimentation with different filters and images.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome.
+
+Possible improvements:
+
+* Additional convolution kernels
+* Performance benchmarks (CPU vs GPU)
+* Support for larger kernels
+* RGB channel optimization
+* Further shared-memory tuning
+
+Fork the repository and submit a pull request.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+⭐ If you find this project useful, consider starring the repository.
